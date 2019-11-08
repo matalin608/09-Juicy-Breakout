@@ -1,21 +1,26 @@
 extends RigidBody2D
 
-onready var Game = get_node("/root/Game")
-onready var Starting = get_node("/root/Game/Starting")
+export var maxspeed = 300
+
+signal lives
+signal score
 
 func _ready():
-	contact_monitor = true
-	set_max_contacts_reported(4)
+ contact_monitor = true
+ set_max_contacts_reported(4)
+ var WorldNode = get_node("/root/World")
+ connect("score", WorldNode, "increase_score")
+ connect("lives", WorldNode, "decrease_lives")
 
 func _physics_process(delta):
-	# Check for collisions
-	var bodies = get_colliding_bodies()
-	for body in bodies:
-		if body.is_in_group("Tiles"):
-			Game.change_score(body.points)
-			body.queue_free()
-	
-	if position.y > get_viewport().size.y:
-		Game.change_lives(-1)
-		Starting.startCountdown(3)
-		queue_free()
+ var bodies = get_colliding_bodies()
+ for body in bodies:
+  if body.is_in_group("Tiles"):
+   emit_signal("score",body.score)
+   body.queue_free()
+  if body.get_name() == "Paddle":
+   pass
+  
+ if position.y > get_viewport_rect().end.y:
+  emit_signal("lives")
+  queue_free()
